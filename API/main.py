@@ -27,7 +27,7 @@ def preprocess_audio(input_file):
 
 # === STEP 2: Initiate Gladia session with Translation Enabled ===
 # !!! IMPORTANT: Ensure your REAL API key is here !!!
-GLADIA_API_KEY = "c3d87f5d-c8d4-4c13-b349-cb5237d64e4d" 
+GLADIA_API_KEY = "" 
 
 def initiate_session(target_language='en'):
     url = "https://api.gladia.io/v2/live"
