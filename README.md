@@ -2,8 +2,15 @@
 
 A real-time chat application designed to bridge communication gaps between doctors and patients using advanced AI audio translation.
 
-![Project Status](https://img.shields.io/badge/status-active-success.svg)
-![License](https://img.shields.io/badge/license-MIT-blue.svg)
+[![License: ISC](https://img.shields.io/badge/License-ISC-blue.svg)](https://opensource.org/licenses/ISC)
+[![React](https://img.shields.io/badge/React-18.x-blue)](https://react.dev/)
+[![Material UI](https://img.shields.io/badge/Material%20UI-5.x-0081CB)](https://mui.com/)
+[![Node.js](https://img.shields.io/badge/Node.js-18+-green)](https://nodejs.org/)
+[![MongoDB](https://img.shields.io/badge/MongoDB-Atlas-green)](https://www.mongodb.com/)
+[![Python](https://img.shields.io/badge/Python-3.9+-3776AB)](https://www.python.org/)
+[![Socket.io](https://img.shields.io/badge/Socket.io-4.x-010101)](https://socket.io/)
+[![Vercel](https://img.shields.io/badge/Vercel-Deployment-000000)](https://vercel.com/)
+[![Render](https://img.shields.io/badge/Render-Deployment-46E3B7)](https://render.com/)
 
 ## 🏗 Architecture
 
