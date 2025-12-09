@@ -1,43 +1,69 @@
 # Doctor-Patient Chat App with AI Audio Translation
 
-A real-time chat application for doctors and patients, featuring AI-powered audio translation using Gladia API. This application allows users to send text and audio messages, with audio automatically transcribed and translated.
+A real-time chat application designed to bridge communication gaps between doctors and patients using advanced AI audio translation.
+
+![Project Status](https://img.shields.io/badge/status-active-success.svg)
+![License](https://img.shields.io/badge/license-MIT-blue.svg)
+
+## 📖 Table of Contents
+- [Architecture](#-architecture)
+- [Features](#-features)
+- [Tech Stack](#-tech-stack)
+- [Prerequisites](#-prerequisites)
+- [Installation](#-installation)
+- [Configuration](#-configuration)
+- [Deployment](#-deployment)
+- [API Reference](#-api-reference)
+- [Troubleshooting](#-troubleshooting)
+
+## 🏗 Architecture
+
+The application defines a clear flow for audio processing:
+
+```mermaid
+graph TD
+    User[User (Client)] -->|Upload Audio| Node[Node.js Server]
+    Node -->|Exec| Python[Python Script]
+    Python -->|FFmpeg| Convert[Convert to WAV]
+    Convert -->|WebSocket| Gladia[Gladia AI API]
+    Gladia -->|Translation| Python
+    Python -->|JSON| Node
+    Node -->|Response| User
+```
 
 ## 🚀 Features
 
 - **Real-time Messaging**: Instant text and audio messaging using Socket.io.
-- **Role-based Auth**: Separate login/registration for Doctors and Patients.
-- **Audio Translation**: Uploaded audio is processed via Python and Gladia API for transcription and translation.
-- **Doctor Availability**: Doctors can set their availability status.
-- **Responsive Design**: Modern React frontend with a clean UI.
+- **Role-based Authentication**:
+    - **Doctor**: Can set availability, view patient list.
+    - **Patient**: Can view available doctors, initiate chat.
+- **AI Audio Translation**:
+    - Uploads audio files (mp3, wav, m4a).
+    - Automatically transcodes using FFmpeg.
+    - Transcribes and translates speech using Gladia API.
+- **Responsive Design**: Modern React frontend with Material-like aesthetics.
 
-## 🛠️ Tech Stack
+## 🛠 Tech Stack
 
-### Frontend
-- **React.js**: UI Library
-- **Axios**: API Requests
-- **Socket.io-client**: Real-time communication
-- **Vercel**: Deployment platform
-
-### Backend
-- **Node.js & Express**: Server framework
-- **MongoDB**: Database (Atlas)
-- **Socket.io**: WebSocket server
-- **Multer**: File handling
-- **Render**: Deployment platform (Dockerized)
-
-### AI & Processing
-- **Python 3**: scripting for audio processing
-- **Pydub & FFmpeg**: Audio manipulation
-- **Gladia API**: Speech-to-Text and Translation
+| Component | Technology | Description |
+|-----------|------------|-------------|
+| **Frontend** | React 18 | UI Library with Hooks |
+| **Styling** | CSS Modules | Custom styling (no external UI kit dependency) |
+| **Backend** | Node.js / Express | REST API & Static Serving |
+| **Real-time** | Socket.io | WebSocket communication |
+| **Database** | MongoDB Atlas | Cloud NoSQL Storage |
+| **AI/Scripting** | Python 3 | Audio processing logic |
+| **Processing** | Pydub / FFmpeg | Audio conversion & manipulation |
+| **AI Service** | Gladia API | Real-time Speech-to-Text & Translation |
 
 ## 📋 Prerequisites
 
-- Node.js (v16+)
-- Python 3.9+
-- MongoDB Atlas Account
-- Gladia API Key
+- **Node.js**: v18 or higher
+- **Python**: v3.9+ (v3.13 supported with `audioop-lts`)
+- **MongoDB Atlas**: Account and Connection String
+- **Gladia API Key**: Account at [gladia.io](https://gladia.io)
 
-## ⚙️ Local Installation
+## ⚙️ Installation
 
 ### 1. Clone the Repository
 ```bash
@@ -46,91 +72,88 @@ cd Doctor-Patient-ChatApp
 ```
 
 ### 2. Backend Setup
-The backend requires both Node.js and Python environments.
+The backend is a hybrid Node.js + Python environment.
 
-**Navigate to server:**
+**a. Install Node Dependencies**
 ```bash
 cd doctor-patient-chat/server
 npm install
+# Install system binary for audio probing
+npm install ffprobe-static
 ```
 
-**Setup Python Virtual Environment:**
-Open a new terminal in the project root:
+**b. Setup Python Virtual Environment**
+Go back to the root directory:
 ```bash
-cd API
+cd ../../API
 python3 -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
+source venv/bin/activate  # Windows: venv\Scripts\activate
 pip install -r requirements.txt
 ```
 
-**Configure Environment Variables:**
-Create `doctor-patient-chat/server/.env`:
-```env
-PORT=5001
-MONGODB_URI=your_mongodb_connection_string
-JWT_SECRET=your_jwt_secret
-PYTHON_EXECUTABLE=/absolute/path/to/project/API/venv/bin/python
-GLADIA_API_KEY=your_gladia_key
-CLIENT_URL=http://localhost:3000
-```
-
-**Start the Server:**
-```bash
-cd doctor-patient-chat/server
-npm start
-```
-
 ### 3. Frontend Setup
-**Navigate to client:**
 ```bash
-cd doctor-patient-chat/client
+cd ../doctor-patient-chat/client
 npm install
 ```
 
-**Configure Environment Variables:**
-Create `doctor-patient-chat/client/.env`:
-```env
-REACT_APP_API_URL=http://localhost:5001/api
-REACT_APP_WS_URL=ws://localhost:5001
-```
+## 🔧 Configuration
 
-**Start the Client:**
-```bash
-npm start
-```
+### Server Environment (`doctor-patient-chat/server/.env`)
+
+| Variable | Description | Example |
+|----------|-------------|---------|
+| `PORT` | Server Port | `5001` |
+| `MONGODB_URI` | MongoDB Connection String | `mongodb+srv://user:pass@...` |
+| `JWT_SECRET` | Secret for JWT Tokens | `supersecretkey` |
+| `PYTHON_EXECUTABLE` | Path to Python Venv | `../../API/venv/bin/python` |
+| `GLADIA_API_KEY` | Your Gladia API Key | `c3d8...` |
+| `CLIENT_URL` | Frontend URL (CORS) | `http://localhost:3000` |
+
+### Client Environment (`doctor-patient-chat/client/.env`)
+
+| Variable | Description | Example |
+|----------|-------------|---------|
+| `REACT_APP_API_URL` | Backend HTTP URL | `http://localhost:5001/api` |
+| `REACT_APP_WS_URL` | Backend WebSocket URL | `ws://localhost:5001` |
 
 ## 🚀 Deployment
 
 ### Backend (Render)
-The backend is Dockerized to support both Node.js and Python.
-1.  Connect repo to Render.
-2.  Select **Docker** Runtime.
-3.  Add Environment Variables: `MONGODB_URI`, `JWT_SECRET`, `GLADIA_API_KEY`, `CLIENT_URL`.
-4.  **Important**: Whitelist `0.0.0.0/0` in MongoDB Atlas Network Access.
+1.  **Type**: Web Service (Docker)
+2.  **Build Context**: Root Directory
+3.  **Environment Variables**: Add all Server Env vars defined above.
+4.  **Network**: Allow IP `0.0.0.0/0` in MongoDB Atlas.
 
 ### Frontend (Vercel)
-1.  Import project to Vercel.
-2.  Set Root Directory to `doctor-patient-chat/client`.
-3.  Add Environment Variables:
-    - `REACT_APP_API_URL`: `https://your-render-backend.onrender.com/api`
-    - `REACT_APP_WS_URL`: `wss://your-render-backend.onrender.com`
+1.  **Framework**: Create React App
+2.  **Root Directory**: `doctor-patient-chat/client`
+3.  **Environment Variables**: Add Client Env vars pointing to your Render URL.
+
+## 📡 API Reference
+
+#### Auth
+- `POST /api/auth/register` - Register new user (Doctor/Patient)
+- `POST /api/auth/login` - Login user
+
+#### Users
+- `GET /api/users/doctors` - Get list of doctors
+- `GET /api/users/availability` - Update doctor status
+
+#### Upload
+- `POST /api/upload` - Upload audio for translation
+    - **Body**: `multipart/form-data` with `audio` file and `language` string.
 
 ## 🐛 Troubleshooting
 
-| Issue | Solution |
-|-------|----------|
-| **500 Error on Upload** | Check `PYTHON_EXECUTABLE` path. Ensure `ffprobe` is installed (`npm install ffprobe-static` in server). |
-| **CORS Error** | Check `CLIENT_URL` in backend env and ensure Vercel URL is added. |
-| **MongoDB Error** | Whitelist IP `0.0.0.0/0` in MongoDB Atlas. |
-| **Audio Processing Fail** | Ensure virtual environment (`venv`) dependencies are installed. |
+**Q: Server returns 500 on Audio Upload?**
+> **A:** Check logs. Often due to missing `ffprobe`. Ensure `npm install ffprobe-static` was run in server and `API/main.py` points to it.
 
-## 📂 Project Structure
-```
-Doctor-Patient-ChatApp/
-├── API/                 # Python scripts for audio processing
-├── doctor-patient-chat/
-│   ├── client/          # React Frontend
-│   └── server/          # Node.js/Express Backend
-├── Dockerfile           # Backend deployment config
-└── README.md
-```
+**Q: CORS Error on Vercel?**
+> **A:** Ensure `CLIENT_URL` in backend env matches your Vercel domain exactly (no trailing slash).
+
+**Q: Python script fails with `ModuleNotFoundError: No module named 'audioop'`?**
+> **A:** You are using Python 3.13+. Ensure `audioop-lts` is installed.
+
+## 📄 License
+This project is licensed under the MIT License.
