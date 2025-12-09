@@ -47,7 +47,10 @@ def preprocess_audio(input_file):
 
 # === STEP 2: Initiate Gladia session with Translation Enabled ===
 # Reads API key from environment if available, otherwise falls back to the default
-GLADIA_API_KEY = os.getenv("GLADIA_API_KEY", "c3d87f5d-c8d4-4c13-b349-cb5237d64e4d") 
+GLADIA_API_KEY = os.getenv("GLADIA_API_KEY")
+if not GLADIA_API_KEY:
+    print("Error: GLADIA_API_KEY environment variable not set.")
+    sys.exit(1) 
 
 def initiate_session(target_language='en'):
     url = "https://api.gladia.io/v2/live"
