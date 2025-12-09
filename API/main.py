@@ -1,5 +1,4 @@
-# from pydub import AudioSegment  <-- REMOVED due to Python 3.13 incompatibility
-import subprocess
+from pydub import AudioSegment
 import asyncio
 import websockets
 import requests
@@ -11,42 +10,40 @@ import sys
 import ssl
 import certifi
 
-# ... (stdout config logic) ...
+# Configure stdout to use UTF-8 to avoid UnicodeEncodeError on Windows consoles
+try:
+    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+except Exception:
+    # If reconfigure is not available, ignore and rely on PYTHONIOENCODING
+    pass
+
 
 # Disable SSL certificate verification
 ssl_context = ssl.create_default_context()
 ssl_context.check_hostname = False
 ssl_context.verify_mode = ssl.CERT_NONE
 
+# Configure ffmpeg for pydub
+ffmpeg_path = "/Users/ganesharihanth/Personal/GitHub Repo/Doctor-Patient-ChatApp/doctor-patient-chat/server/node_modules/ffmpeg-static/ffmpeg"
+ffprobe_path = "/Users/ganesharihanth/Personal/GitHub Repo/Doctor-Patient-ChatApp/doctor-patient-chat/server/node_modules/ffprobe-static/bin/darwin/arm64/ffprobe"
+if os.path.exists(ffmpeg_path):
+    AudioSegment.converter = ffmpeg_path
+    os.environ["PATH"] += os.pathsep + os.path.dirname(ffmpeg_path)
+
+if os.path.exists(ffprobe_path):
+    AudioSegment.ffprobe = ffprobe_path
+    os.environ["PATH"] += os.pathsep + os.path.dirname(ffprobe_path)
+
+
 # === STEP 1: Convert audio to Gladia-compatible format ===
 CONVERTED_AUDIO = "input.wav"
 
 def preprocess_audio(input_file):
-    # Use ffmpeg directly because pydub relies on 'audioop' module which is removed in Python 3.13
-    # We use the FFMPEG_PATH from env or default to 'ffmpeg'
-    ffmpeg_binary = os.getenv("FFMPEG_PATH", "ffmpeg")
-    
-    # Command: ffmpeg -y -i input -ac 1 -ar 16000 -acodec pcm_s16le output.wav
-    cmd = [
-        ffmpeg_binary,
-        "-y", # Overwrite output file
-        "-i", input_file,
-        "-ac", "1", # Mono
-        "-ar", "16000", # 16kHz
-        "-acodec", "pcm_s16le", # 16-bit
-        CONVERTED_AUDIO
-    ]
-    
-    print(f"DEBUG: Running ffmpeg command: {' '.join(cmd)}", file=sys.stderr)
-    
-    try:
-        # Run ffmpeg, suppress stderr unless it fails
-        subprocess.run(cmd, check=True, stderr=subprocess.PIPE, stdout=subprocess.PIPE)
-        print("DEBUG: Audio preprocessing successful", file=sys.stderr)
-    except subprocess.CalledProcessError as e:
-        print(f"ERROR: ffmpeg failed with code {e.returncode}", file=sys.stderr)
-        print(f"stderr: {e.stderr.decode('utf-8', errors='replace')}", file=sys.stderr)
-        raise
+    audio = AudioSegment.from_file(input_file)
+    audio = audio.set_channels(1)
+    audio = audio.set_frame_rate(16000)
+    audio = audio.set_sample_width(2)
+    audio.export(CONVERTED_AUDIO, format="wav")
 
 # === STEP 2: Initiate Gladia session with Translation Enabled ===
 # Reads API key from environment if available, otherwise falls back to the default

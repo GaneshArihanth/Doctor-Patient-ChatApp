@@ -124,22 +124,12 @@ app.post('/api/upload', (req, res) => {
     }
 
 
-    let ffmpegPath;
-    if (process.env.FFMPEG_PATH) {
-      ffmpegPath = process.env.FFMPEG_PATH;
-    } else {
-      ffmpegPath = require('ffmpeg-static');
-    }
-    const pathEnv = process.env.PATH + path.delimiter + path.dirname(ffmpegPath);
-
     const pythonProcess = exec(
-      `${pythonExecutable} "${pythonScriptPath}" "${filePath}" "${language}"`,
+      `"${pythonExecutable}" "${pythonScriptPath}" "${filePath}" "${language}"`,
       {
         maxBuffer: 1024 * 5000,
         env: {
           ...process.env,
-          PATH: pathEnv,
-          FFMPEG_PATH: ffmpegPath,
           PYTHONUNBUFFERED: '1',
           PYTHONIOENCODING: 'utf-8',
         }
