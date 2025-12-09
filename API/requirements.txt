@@ -5,4 +5,4 @@ pydub==0.25.1
 requests==2.32.5
 urllib3==2.5.0
 websockets==15.0.1
-audioop-lts
+audioop-lts; python_version >= "3.13"
