@@ -5,24 +5,13 @@ A real-time chat application designed to bridge communication gaps between docto
 ![Project Status](https://img.shields.io/badge/status-active-success.svg)
 ![License](https://img.shields.io/badge/license-MIT-blue.svg)
 
-## 📖 Table of Contents
-- [Architecture](#-architecture)
-- [Features](#-features)
-- [Tech Stack](#-tech-stack)
-- [Prerequisites](#-prerequisites)
-- [Installation](#-installation)
-- [Configuration](#-configuration)
-- [Deployment](#-deployment)
-- [API Reference](#-api-reference)
-- [Troubleshooting](#-troubleshooting)
-
 ## 🏗 Architecture
 
 The application defines a clear flow for audio processing:
 
 ```mermaid
 graph TD
-    User[User (Client)] -->|Upload Audio| Node[Node.js Server]
+    User["User (Client)"] -->|Upload Audio| Node[Node.js Server]
     Node -->|Exec| Python[Python Script]
     Python -->|FFmpeg| Convert[Convert to WAV]
     Convert -->|WebSocket| Gladia[Gladia AI API]
