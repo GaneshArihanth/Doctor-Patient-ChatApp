@@ -19,7 +19,13 @@ const app = express();
 const server = http.createServer(app);
 
 // Socket.io setup
-const allowedOrigins = ['http://localhost:3000', 'http://localhost:3001'];
+// Socket.io setup
+const allowedOrigins = [
+  'http://localhost:3000',
+  'http://localhost:3001',
+  'https://doctor-patient-chatapp-ga15.vercel.app', // Your Vercel App
+  process.env.CLIENT_URL // Allow setting via Env Var
+].filter(Boolean);
 
 const io = socketIo(server, {
   cors: {
