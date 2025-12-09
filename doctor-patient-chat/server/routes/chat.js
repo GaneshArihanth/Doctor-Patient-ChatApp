@@ -98,7 +98,6 @@ router.get('/conversations', auth, async (req, res) => {
       }
     ]);
 
-    console.log('Conversations data being sent to frontend:', JSON.stringify(conversations, null, 2));
     res.json(conversations);
   } catch (err) {
     console.error(err.message);
@@ -147,7 +146,7 @@ router.post('/message', auth, async (req, res) => {
 // @desc    Send a message to another user
 // @access  Private
 router.post('/send/:userId', auth, async (req, res) => {
-  const { content, audioUrl, translation } = req.body;
+  const { content, audioUrl, translation, prescription } = req.body;
   const receiverId = req.params.userId;
   const senderId = req.user.id;
 
@@ -160,9 +159,10 @@ router.post('/send/:userId', auth, async (req, res) => {
     const newMessage = new Message({
       sender: senderId,
       receiver: receiverId,
-      content: content || '', // Content can be empty if there is audio
+      content: content || (prescription ? 'Prescription' : ''),
       audioUrl: audioUrl || '',
-      translation: translation || ''
+      translation: translation || '',
+      prescription: prescription || undefined
     });
 
     const savedMessage = await newMessage.save();

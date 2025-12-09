@@ -20,8 +20,8 @@ import {
   TextField,
   InputAdornment
 } from '@mui/material';
-import { 
-  Person as PersonIcon, 
+import {
+  Person as PersonIcon,
   Search as SearchIcon,
   Chat as ChatIcon,
   MedicalServices as MedicalServicesIcon,
@@ -54,8 +54,8 @@ const DoctorDashboard: React.FC = () => {
       try {
         const response = await axios.get(`${API_BASE_URL}/chat/conversations`);
         const conversations = response.data || [];
-        
-                const patientsList = conversations.map((conversation: any) => {
+
+        const patientsList = conversations.map((conversation: any) => {
           const lastSeenDate = conversation.user.lastSeen ? parseISO(conversation.user.lastSeen) : null;
           const lastMessageDate = conversation.lastMessage?.createdAt ? parseISO(conversation.lastMessage.createdAt) : null;
 
@@ -66,7 +66,7 @@ const DoctorDashboard: React.FC = () => {
             lastSeen: lastSeenDate && isValid(lastSeenDate) ? format(lastSeenDate, 'p, dd/MM/yy') : 'N/A',
             unreadCount: conversation.unreadCount || 0,
             lastMessage: conversation.lastMessage?.content || '',
-            lastMessageTime: lastMessageDate && isValid(lastMessageDate) 
+            lastMessageTime: lastMessageDate && isValid(lastMessageDate)
               ? format(lastMessageDate, 'p')
               : ''
           }
@@ -75,6 +75,10 @@ const DoctorDashboard: React.FC = () => {
         setPatients(patientsList);
       } catch (error) {
         console.error('Error fetching patients:', error);
+        if (axios.isAxiosError(error) && error.response?.status === 401) {
+          console.log('Token expired or invalid, logging out...');
+          logout();
+        }
       } finally {
         setLoading(false);
       }
@@ -97,7 +101,7 @@ const DoctorDashboard: React.FC = () => {
   const handleAvailabilityChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const newStatus = event.target.checked;
     setIsAvailable(newStatus);
-    
+
     try {
       await axios.put(`${API_BASE_URL}/users/availability`, { isAvailable: newStatus });
     } catch (error) {
@@ -138,15 +142,15 @@ const DoctorDashboard: React.FC = () => {
           <Box display="flex" alignItems="center" gap={2}>
             <FormControlLabel
               control={
-                <Switch 
-                  checked={isAvailable} 
+                <Switch
+                  checked={isAvailable}
                   onChange={handleAvailabilityChange}
                   color="primary"
                 />
               }
               label={
                 <Box display="flex" alignItems="center">
-                  <Box 
+                  <Box
                     sx={{
                       width: 10,
                       height: 10,
@@ -161,8 +165,8 @@ const DoctorDashboard: React.FC = () => {
                 </Box>
               }
             />
-            <Button 
-              variant="outlined" 
+            <Button
+              variant="outlined"
               color="primary"
               onClick={() => logout()}
             >
@@ -193,7 +197,7 @@ const DoctorDashboard: React.FC = () => {
             {filteredPatients.length > 0 ? (
               filteredPatients.map((patient, index) => (
                 <React.Fragment key={patient.id}>
-                  <ListItem 
+                  <ListItem
                     alignItems="flex-start"
                     secondaryAction={
                       <Button

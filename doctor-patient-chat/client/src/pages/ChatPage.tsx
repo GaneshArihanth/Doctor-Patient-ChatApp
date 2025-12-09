@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Box, Typography, IconButton, TextField, Paper, Avatar, Badge, useTheme, Select, MenuItem, FormControl, InputLabel, SelectChangeEvent, Snackbar, Alert } from '@mui/material';
+import { Box, Typography, IconButton, TextField, Paper, Avatar, Badge, useTheme, Select, MenuItem, FormControl, InputLabel, SelectChangeEvent, Snackbar, Alert, Button } from '@mui/material';
 import { ArrowBack, Send, Mic, AttachFile } from '@mui/icons-material';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
@@ -7,6 +7,7 @@ import axios from 'axios';
 import { API_BASE_URL } from '../config';
 import ChatMessage from '../components/chat/ChatMessage';
 import AudioRecorder from '../components/chat/AudioRecorder';
+import PrescriptionDialog, { Prescription } from '../components/chat/PrescriptionDialog';
 
 interface Message {
   _id: string;
@@ -14,6 +15,7 @@ interface Message {
   receiver?: { _id: string; name: string; avatar?: string };
   content: string;
   audioUrl?: string;
+  prescription?: Prescription;
   createdAt: string;
   status: 'sending' | 'sent' | 'failed';
 }
@@ -38,6 +40,7 @@ const ChatPageWithAudio: React.FC = () => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [message, setMessage] = useState('');
   const [showAudioRecorder, setShowAudioRecorder] = useState(false);
+  const [showPrescriptionDialog, setShowPrescriptionDialog] = useState(false);
   const [translationLanguage, setTranslationLanguage] = useState('en');
   const [isUploading, setIsUploading] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
@@ -176,7 +179,7 @@ const ChatPageWithAudio: React.FC = () => {
     }
   };
 
-  const handleSendMessage = async (content: string, audioBlob?: Blob) => {
+  const handleSendMessage = async (content: string, audioBlob?: Blob, prescription?: Prescription) => {
     if ((!content.trim() && !audioBlob) || !currentUser || !chatId || !otherUser) return;
 
     let audioUrl = '';
@@ -188,6 +191,7 @@ const ChatPageWithAudio: React.FC = () => {
       sender: { _id: currentUser._id, name: currentUser.name, avatar: currentUser.avatar },
       receiver: { _id: otherUser._id, name: otherUser.name },
       content,
+      prescription,
       createdAt: new Date().toISOString(),
       status: 'sending',
     };
@@ -201,8 +205,6 @@ const ChatPageWithAudio: React.FC = () => {
           const formData = new FormData();
           formData.append('audio', audioBlob, 'recording.mp4');
           formData.append('language', translationLanguage);
-          
-          console.log('Uploading audio file...');
           const uploadRes = await axios.post(`${API_BASE_URL.replace(/\/$/, '')}/upload`, formData, {
             headers: {
               'Content-Type': 'multipart/form-data',
@@ -210,18 +212,12 @@ const ChatPageWithAudio: React.FC = () => {
             },
             timeout: 30000, // 30 second timeout
           });
-          
-          console.log('Upload response:', uploadRes.data);
-          
           if (!uploadRes.data.filePath) {
             throw new Error('No file path in upload response');
           }
           
           audioUrl = uploadRes.data.filePath;
           translation = uploadRes.data.translation || '';
-          
-          console.log('Audio uploaded successfully. Path:', audioUrl);
-          console.log('Translation:', translation);
         } catch (error: any) {
           console.error('Error uploading audio:', error);
           const errorMessage = error?.response?.data?.msg || error?.message || 'Unknown error during upload';
@@ -231,7 +227,7 @@ const ChatPageWithAudio: React.FC = () => {
 
       const res = await axios.post(
         `${API_BASE_URL}/chat/send/${chatId}`,
-        { content, audioUrl, translation },
+        { content, audioUrl, translation, prescription },
         { headers: { 'x-auth-token': token || '' } }
       );
 
@@ -254,10 +250,14 @@ const ChatPageWithAudio: React.FC = () => {
         audio.currentTime = 0;
       }
     });
+
+    // Ensure we have a full backend URL for the audio file
+    const baseApiOrigin = API_BASE_URL.replace(/\/$/, '').replace(/\/api$/, '');
+    const fullUrl = url.startsWith('http') ? url : `${baseApiOrigin}${url}`;
     
     // Play the selected audio
-    const audio = new Audio(url);
-    audioRefs.current[url] = audio;
+    const audio = new Audio(fullUrl);
+    audioRefs.current[fullUrl] = audio;
     audio.play().catch(console.error);
   };
 
@@ -328,6 +328,17 @@ const ChatPageWithAudio: React.FC = () => {
         </Box>
       )}
       
+      {currentUser?.role === 'doctor' && (
+        <PrescriptionDialog
+          open={showPrescriptionDialog}
+          onClose={() => setShowPrescriptionDialog(false)}
+          onSubmit={(prescription) => {
+            handleSendMessage('Prescription', undefined, prescription);
+            setShowPrescriptionDialog(false);
+          }}
+        />
+      )}
+
       {/* Message Input */}
       <Box sx={{ p: 2, display: 'flex', alignItems: 'center', gap: 1, borderTop: `1px solid ${theme.palette.divider}` }}>
         <FormControl size="small" sx={{ minWidth: 120 }}>
@@ -347,6 +358,17 @@ const ChatPageWithAudio: React.FC = () => {
           </Select>
         </FormControl>
         
+        {currentUser?.role === 'doctor' && (
+          <Button
+            variant="outlined"
+            size="small"
+            onClick={() => setShowPrescriptionDialog(true)}
+            disabled={showAudioRecorder || isUploading}
+          >
+            Prescription
+          </Button>
+        )}
+
         {/* File attachment button */}
         <IconButton 
           onClick={handleAttachFile}

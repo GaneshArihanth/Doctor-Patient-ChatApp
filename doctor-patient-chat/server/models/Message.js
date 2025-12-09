@@ -14,7 +14,7 @@ const messageSchema = new mongoose.Schema({
   content: {
     type: String,
     required: function() {
-      return !this.attachment; // Content is not required if there's an attachment
+      return !this.attachment && !this.prescription;
     }
   },
   attachment: {
@@ -55,6 +55,33 @@ const messageSchema = new mongoose.Schema({
   audioUrl: {
     type: String,
     default: ''
+  },
+  prescription: {
+    medications: [
+      {
+        name: {
+          type: String,
+          required: true,
+          trim: true
+        },
+        dosage: {
+          type: String,
+          default: ''
+        },
+        morning: {
+          type: Boolean,
+          default: false
+        },
+        night: {
+          type: Boolean,
+          default: false
+        }
+      }
+    ],
+    notes: {
+      type: String,
+      default: ''
+    }
   }
 }, {
   timestamps: true

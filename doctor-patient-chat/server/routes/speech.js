@@ -65,10 +65,11 @@ router.post('/transcribe', auth, upload.single('audio'), async (req, res) => {
 
     // Call the existing speech-to-text API
     const { spawn } = require('child_process');
-    const pythonProcess = spawn('python3', [
+    const pythonExecutable = process.env.PYTHON_EXECUTABLE || (process.platform === 'win32' ? 'python' : 'python3');
+    const pythonProcess = spawn(pythonExecutable, [
       path.join(__dirname, '../../API/main.py'),
-      '--input', outputFile,
-      '--target', targetLanguage
+      outputFile,
+      targetLanguage
     ]);
 
     let result = '';

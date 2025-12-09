@@ -1,4 +1,5 @@
-from pydub import AudioSegment
+# from pydub import AudioSegment  <-- REMOVED due to Python 3.13 incompatibility
+import subprocess
 import asyncio
 import websockets
 import requests
@@ -10,6 +11,8 @@ import sys
 import ssl
 import certifi
 
+# ... (stdout config logic) ...
+
 # Disable SSL certificate verification
 ssl_context = ssl.create_default_context()
 ssl_context.check_hostname = False
@@ -19,15 +22,35 @@ ssl_context.verify_mode = ssl.CERT_NONE
 CONVERTED_AUDIO = "input.wav"
 
 def preprocess_audio(input_file):
-    audio = AudioSegment.from_file(input_file)
-    audio = audio.set_channels(1)
-    audio = audio.set_frame_rate(16000)
-    audio = audio.set_sample_width(2)
-    audio.export(CONVERTED_AUDIO, format="wav")
+    # Use ffmpeg directly because pydub relies on 'audioop' module which is removed in Python 3.13
+    # We use the FFMPEG_PATH from env or default to 'ffmpeg'
+    ffmpeg_binary = os.getenv("FFMPEG_PATH", "ffmpeg")
+    
+    # Command: ffmpeg -y -i input -ac 1 -ar 16000 -acodec pcm_s16le output.wav
+    cmd = [
+        ffmpeg_binary,
+        "-y", # Overwrite output file
+        "-i", input_file,
+        "-ac", "1", # Mono
+        "-ar", "16000", # 16kHz
+        "-acodec", "pcm_s16le", # 16-bit
+        CONVERTED_AUDIO
+    ]
+    
+    print(f"DEBUG: Running ffmpeg command: {' '.join(cmd)}", file=sys.stderr)
+    
+    try:
+        # Run ffmpeg, suppress stderr unless it fails
+        subprocess.run(cmd, check=True, stderr=subprocess.PIPE, stdout=subprocess.PIPE)
+        print("DEBUG: Audio preprocessing successful", file=sys.stderr)
+    except subprocess.CalledProcessError as e:
+        print(f"ERROR: ffmpeg failed with code {e.returncode}", file=sys.stderr)
+        print(f"stderr: {e.stderr.decode('utf-8', errors='replace')}", file=sys.stderr)
+        raise
 
 # === STEP 2: Initiate Gladia session with Translation Enabled ===
-# !!! IMPORTANT: Ensure your REAL API key is here !!!
-GLADIA_API_KEY = "" 
+# Reads API key from environment if available, otherwise falls back to the default
+GLADIA_API_KEY = os.getenv("GLADIA_API_KEY", "c3d87f5d-c8d4-4c13-b349-cb5237d64e4d") 
 
 def initiate_session(target_language='en'):
     url = "https://api.gladia.io/v2/live"

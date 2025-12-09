@@ -19,16 +19,18 @@ const app = express();
 const server = http.createServer(app);
 
 // Socket.io setup
+const allowedOrigins = ['http://localhost:3000', 'http://localhost:3001'];
+
 const io = socketIo(server, {
   cors: {
-    origin: "http://localhost:3000",
+    origin: allowedOrigins,
     methods: ["GET", "POST"]
   }
 });
 
 // CORS Configuration
 const corsOptions = {
-  origin: 'http://localhost:3000',
+  origin: allowedOrigins,
   methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
   credentials: true,
   optionsSuccessStatus: 204,
@@ -38,10 +40,31 @@ app.use(cors(corsOptions));
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 
-// Connect to MongoDB
+// Connect to MongoDB and start server
 mongoose.connect(process.env.MONGODB_URI)
-.then(() => console.log('MongoDB Connected'))
-.catch(err => console.error('MongoDB connection error:', err));
+  .then(() => {
+    console.log('MongoDB connected');
+
+    const PORT = process.env.PORT || 5000;
+    server.listen(PORT, () => {
+      console.log(`Server listening on port ${PORT}`);
+    });
+  })
+  .catch(err => {
+    console.error('MongoDB connection error:', err);
+    process.exit(1);
+  });
+
+// Test endpoint
+app.get('/api/auth/test', (req, res) => {
+  res.status(200).json({
+    success: true,
+    message: 'API is working!',
+    timestamp: new Date().toISOString(),
+    environment: process.env.NODE_ENV,
+    nodeVersion: process.version
+  });
+});
 
 // Routes
 app.use('/api/auth', authRoutes);
@@ -49,17 +72,26 @@ app.use('/api/users', userRoutes);
 app.use('/api/chat', chatRoutes);
 app.use('/api/speech', speechRoutes);
 
+// Serve React frontend build (client) for all non-API routes
+const clientBuildPath = path.join(__dirname, '..', 'client', 'build');
+app.use(express.static(clientBuildPath));
+
+// Catch-all for frontend routes: use a regex to avoid path-to-regexp '*' issue
+app.get(/^(?!\/api).*/, (req, res) => {
+  res.sendFile(path.join(clientBuildPath, 'index.html'));
+});
+
 // Multer config for file uploads
 const storage = multer.diskStorage({
   destination: './uploads/',
-  filename: function(req, file, cb){
+  filename: function (req, file, cb) {
     cb(null, file.fieldname + '-' + Date.now() + path.extname(file.originalname));
   }
 });
 
 const upload = multer({
   storage: storage,
-  limits:{fileSize: 10000000} // 10MB limit
+  limits: { fileSize: 10000000 } // 10MB limit
 }).single('audio');
 
 // @route   POST api/upload
@@ -77,8 +109,7 @@ app.post('/api/upload', (req, res) => {
     const filePath = req.file.path;
     const language = req.body.language || 'en'; // Default to English
     const pythonScriptPath = path.join(__dirname, '..', '..', 'API', 'main.py');
-
-    console.log(`Executing Python script: python3 ${pythonScriptPath} ${filePath} ${language}`);
+    const pythonExecutable = process.env.PYTHON_EXECUTABLE || (process.platform === 'win32' ? 'python' : 'python3');
 
     // Check if python script exists
     if (!fs.existsSync(pythonScriptPath)) {
@@ -88,61 +119,54 @@ app.post('/api/upload', (req, res) => {
 
     // Check if the uploaded file exists
     if (!fs.existsSync(filePath)) {
-        console.error('Uploaded file not found at:', filePath);
-        return res.status(500).json({ msg: 'Uploaded audio file not found' });
+      console.error('Uploaded file not found at:', filePath);
+      return res.status(500).json({ msg: 'Uploaded audio file not found' });
     }
 
-    console.log(`Starting Python process with command: python3 "${pythonScriptPath}" "${filePath}" "${language}"`);
-    
+
+    const ffmpegPath = require('ffmpeg-static');
+    const pathEnv = process.env.PATH + path.delimiter + path.dirname(ffmpegPath);
+
     const pythonProcess = exec(
-      `python3 "${pythonScriptPath}" "${filePath}" "${language}"`,
-      { 
+      `${pythonExecutable} "${pythonScriptPath}" "${filePath}" "${language}"`,
+      {
         maxBuffer: 1024 * 5000,
-        env: { ...process.env, PYTHONUNBUFFERED: '1' } // Ensure Python output is not buffered
+        env: {
+          ...process.env,
+          PATH: pathEnv,
+          FFMPEG_PATH: ffmpegPath,
+          PYTHONUNBUFFERED: '1',
+          PYTHONIOENCODING: 'utf-8',
+        }
       },
       (error, stdout, stderr) => {
-        console.log('Python script execution completed');
-        console.log('stdout:', stdout);
-        console.log('stderr:', stderr);
-        console.log('error:', error);
-        
-        // If there was an error, log more details
+
         if (error) {
-          console.error('Python execution error details:', {
-            code: error.code,
-            signal: error.signal,
-            cmd: error.cmd,
-            killed: error.killed,
-            spawnargs: error.spawnargs
+          console.error(`Python execution error: ${error.message}`);
+          console.error(`stderr: ${stderr}`);
+          return res.status(500).json({
+            msg: 'Error processing audio file',
+            error: error.message,
+            stderr: stderr,
+            stdout: stdout
           });
         }
-      
-      if (error) {
-        console.error(`Python execution error: ${error.message}`);
-        console.error(`stderr: ${stderr}`);
-        return res.status(500).json({ 
-          msg: 'Error processing audio file', 
-          error: error.message, 
-          stderr: stderr,
-          stdout: stdout
-        });
-      }
-      
-      if (stderr && !stdout) {
-        console.error(`Python stderr output: ${stderr}`);
-        return res.status(500).json({ 
-          msg: 'Error in audio processing script', 
-          stderr: stderr,
-          stdout: stdout
-        });
-      }
 
-      res.json({
-        msg: 'File uploaded and processed!',
-        filePath: `/uploads/${req.file.filename}`,
-        translation: stdout.trim(),
+        if (stderr && !stdout) {
+          console.error(`Python stderr output: ${stderr}`);
+          return res.status(500).json({
+            msg: 'Error in audio processing script',
+            stderr: stderr,
+            stdout: stdout
+          });
+        }
+
+        res.json({
+          msg: 'File uploaded and processed!',
+          filePath: `/api/uploads/${req.file.filename}`,
+          translation: stdout.trim(),
+        });
       });
-    });
   });
 });
 
@@ -150,9 +174,8 @@ app.post('/api/upload', (req, res) => {
 const uploadsDir = path.join(__dirname, 'uploads');
 if (!fs.existsSync(uploadsDir)) {
   fs.mkdirSync(uploadsDir, { recursive: true });
-  console.log(`Created uploads directory at: ${uploadsDir}`);
 } else {
-  console.log(`Using uploads directory at: ${uploadsDir}`);
+
 }
 
 // Serve static files from the uploads directory with proper path resolution
@@ -161,13 +184,13 @@ app.use('/api/uploads', express.static(uploadsDir));
 // Route to handle file download with proper content type
 app.get('/api/uploads/:filename', (req, res) => {
   const filePath = path.join(uploadsDir, req.params.filename);
-  
+
   // Check if file exists
   if (fs.existsSync(filePath)) {
     // Get the file extension
     const ext = path.extname(filePath).toLowerCase();
     let contentType = 'application/octet-stream';
-    
+
     // Set appropriate content type based on file extension
     switch (ext) {
       case '.jpg':
@@ -199,15 +222,15 @@ app.get('/api/uploads/:filename', (req, res) => {
         contentType = 'text/plain';
         break;
     }
-    
+
     // Set headers
     res.setHeader('Content-Type', contentType);
     res.setHeader('Content-Disposition', `inline; filename="${path.basename(filePath)}"`);
-    
+
     // Stream the file to the response
     const fileStream = fs.createReadStream(filePath);
     fileStream.pipe(res);
-    
+
     // Handle errors
     fileStream.on('error', (error) => {
       console.error('Error streaming file:', error);
@@ -221,12 +244,9 @@ app.get('/api/uploads/:filename', (req, res) => {
 
 // Socket.io connection handling
 io.on('connection', (socket) => {
-  console.log('New client connected');
-  
   // Join a conversation
   socket.on('joinConversation', (conversationId) => {
     socket.join(conversationId);
-    console.log(`User joined conversation: ${conversationId}`);
   });
 
   // Handle new messages
@@ -235,9 +255,5 @@ io.on('connection', (socket) => {
   });
 
   socket.on('disconnect', () => {
-    console.log('Client disconnected');
   });
 });
-
-const PORT = process.env.PORT || 5001;
-server.listen(PORT, () => console.log(`Server running on port ${PORT}`));

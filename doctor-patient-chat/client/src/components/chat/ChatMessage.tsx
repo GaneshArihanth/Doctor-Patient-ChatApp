@@ -46,6 +46,18 @@ interface Attachment {
   fileSize?: number;
 }
 
+interface PrescriptionMedication {
+  name: string;
+  dosage: string;
+  morning: boolean;
+  night: boolean;
+}
+
+interface Prescription {
+  medications: PrescriptionMedication[];
+  notes?: string;
+}
+
 interface Attachment {
   fileName: string;
   fileUrl: string;
@@ -69,6 +81,7 @@ interface ChatMessageProps {
     targetLanguage?: string;
     translation?: string;
     audioUrl?: string;
+    prescription?: Prescription;
     attachment?: Attachment;
     createdAt: Date | string;
     status: 'sending' | 'sent' | 'delivered' | 'read' | 'failed';
@@ -305,7 +318,65 @@ const ChatMessage: React.FC<ChatMessageProps> = (props) => {
               position: 'relative',
             }}
           >
-            {message.audioUrl ? (
+            {message.prescription && message.prescription.medications && message.prescription.medications.length > 0 ? (
+              <Box sx={{ minWidth: 260 }}>
+                <Typography variant="subtitle2" sx={{ fontWeight: 700, mb: 0.5 }}>
+                  Prescription
+                </Typography>
+                <Typography variant="caption" sx={{ display: 'block', mb: 1 }}>
+                  Doctor: {message.sender.name}
+                </Typography>
+                <Box
+                  sx={{
+                    borderRadius: 1.5,
+                    border: `1px solid ${isOwnMessage ? 'rgba(255, 255, 255, 0.2)' : 'rgba(0, 0, 0, 0.12)'}`,
+                    bgcolor: isOwnMessage ? 'rgba(0,0,0,0.08)' : 'background.paper',
+                    p: 1,
+                  }}
+                >
+                  {message.prescription.medications.map((med, index) => (
+                    <Box
+                      key={index}
+                      sx={{
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        mb: index === message.prescription!.medications.length - 1 ? 0 : 0.75,
+                      }}
+                    >
+                      <Box sx={{ mr: 1, minWidth: 0 }}>
+                        <Typography variant="body2" sx={{ fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                          {med.name}
+                        </Typography>
+                        {med.dosage && (
+                          <Typography variant="caption" color="text.secondary">
+                            {med.dosage}
+                          </Typography>
+                        )}
+                      </Box>
+                      <Box sx={{ display: 'flex', gap: 0.5 }}>
+                        {med.morning && (
+                          <Chip size="small" label="Day" color="primary" variant={isOwnMessage ? 'outlined' : 'filled'} />
+                        )}
+                        {med.night && (
+                          <Chip size="small" label="Night" color="secondary" variant={isOwnMessage ? 'outlined' : 'filled'} />
+                        )}
+                      </Box>
+                    </Box>
+                  ))}
+                </Box>
+                {message.prescription.notes && (
+                  <Box sx={{ mt: 1 }}>
+                    <Typography variant="caption" sx={{ fontWeight: 500, display: 'block', mb: 0.25 }}>
+                      Notes
+                    </Typography>
+                    <Typography variant="caption" sx={{ whiteSpace: 'pre-wrap' }}>
+                      {message.prescription.notes}
+                    </Typography>
+                  </Box>
+                )}
+              </Box>
+            ) : message.audioUrl ? (
               <>
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                   <IconButton
@@ -344,12 +415,6 @@ const ChatMessage: React.FC<ChatMessageProps> = (props) => {
                 {message.isTranslated && (
                   <Collapse in={showTranslation}>
                     <Box sx={{ mt: 1, pt: 1, borderTop: `1px solid ${isOwnMessage ? 'rgba(255, 255, 255, 0.2)' : 'rgba(0, 0, 0, 0.1)'}` }}>
-                      <Stack direction="row" justifyContent="flex-end" alignItems="center" spacing={0.5} sx={{ mt: 0.5 }}>
-              <Typography variant="caption" sx={{ color: isOwnMessage ? 'primary.contrastText' : 'text.secondary', opacity: 0.8 }}>
-                {formatTime(message.createdAt)}
-              </Typography>
-              {isOwnMessage && getStatusIcon()}
-            </Stack>
                       <Typography variant="body2">
                         {message.content}
                       </Typography>
