@@ -124,7 +124,12 @@ app.post('/api/upload', (req, res) => {
     }
 
 
-    const ffmpegPath = require('ffmpeg-static');
+    let ffmpegPath;
+    if (process.env.FFMPEG_PATH) {
+      ffmpegPath = process.env.FFMPEG_PATH;
+    } else {
+      ffmpegPath = require('ffmpeg-static');
+    }
     const pathEnv = process.env.PATH + path.delimiter + path.dirname(ffmpegPath);
 
     const pythonProcess = exec(

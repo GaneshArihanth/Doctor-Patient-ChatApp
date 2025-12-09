@@ -1,8 +1,8 @@
 // API Base URL - when frontend and backend are served from the same origin (e.g. on Railway)
-export const API_BASE_URL = '/api';
+export const API_BASE_URL = process.env.REACT_APP_API_URL || '/api';
 
 // WebSocket URL - update this in production
-export const WS_BASE_URL = 'ws://localhost:5001';
+export const WS_BASE_URL = process.env.REACT_APP_WS_URL || 'ws://localhost:5001';
 
 // API Endpoints
 export const API_ENDPOINTS = {
@@ -12,7 +12,7 @@ export const API_ENDPOINTS = {
     REGISTER: `${API_BASE_URL}/auth/register`,
     USER: `${API_BASE_URL}/auth/user`,
   },
-  
+
   // User endpoints
   USERS: {
     DOCTORS: `${API_BASE_URL}/users/doctors`,
@@ -20,19 +20,19 @@ export const API_ENDPOINTS = {
     LANGUAGE: `${API_BASE_URL}/users/language`,
     PROFILE: (userId: string) => `${API_BASE_URL}/users/${userId}`,
   },
-  
+
   // Chat endpoints
   CHAT: {
     CONVERSATION: (userId: string) => `${API_BASE_URL}/chat/conversation/${userId}`,
     CONVERSATIONS: `${API_BASE_URL}/chat/conversations`,
     MESSAGE: `${API_BASE_URL}/chat/message`,
   },
-  
+
   // Speech endpoints
   SPEECH: {
     TRANSCRIBE: `${API_BASE_URL}/speech/transcribe`,
   },
-  
+
   // Upload endpoints
   UPLOAD: {
     AUDIO: `${API_BASE_URL}/upload/audio`,
