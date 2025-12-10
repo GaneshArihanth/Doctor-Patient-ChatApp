@@ -12,7 +12,7 @@ A real-time chat application designed to bridge communication gaps between docto
 [![Vercel](https://img.shields.io/badge/Vercel-Deployment-000000)](https://vercel.com/)
 [![Render](https://img.shields.io/badge/Render-Deployment-46E3B7)](https://render.com/)
 
-## 🏗 Architecture
+## 🏗 Architecture 
 
 The application defines a clear flow for audio processing:
 
