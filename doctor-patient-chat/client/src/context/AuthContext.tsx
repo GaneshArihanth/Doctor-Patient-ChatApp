@@ -35,20 +35,13 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
 
-  // Set auth token for axios requests and load user
-  useEffect(() => {
-    const initializeAuth = async () => {
-      if (token) {
-        axios.defaults.headers.common['x-auth-token'] = token;
-        await loadUser();
-      } else {
-        delete axios.defaults.headers.common['x-auth-token'];
-      }
-      setInitialLoading(false);
-    };
-
-    initializeAuth();
-  }, [token]);
+  // Logout user
+  const logout = () => {
+    localStorage.removeItem('token');
+    setToken(null);
+    setUser(null);
+    navigate('/login');
+  };
 
   // Load user data
   const loadUser = async () => {
@@ -57,15 +50,66 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       setUser(res.data);
     } catch (err) {
       console.error('Error loading user', err);
-      logout();
+      // We don't verify error status here because loadUser is called inside initializeAuth
+      // which catches errors and decides whether to logout.
+      // However, if called independently, it might need to handle errors.
+      // Re-throwing allows the caller to handle it.
+      throw err;
     }
   };
+
+  // Set auth token for axios requests and load user
+  useEffect(() => {
+    const initializeAuth = async () => {
+      if (token) {
+        axios.defaults.headers.common['x-auth-token'] = token;
+        try {
+          await loadUser();
+        } catch (err: any) {
+          console.error('Error loading user in init:', err);
+          // Only logout if 401 unauthorized or 403 forbidden
+          if (err.response && (err.response.status === 401 || err.response.status === 403)) {
+            logout();
+          } else {
+            console.warn('Failed to load user but not logging out (status not 401/403)');
+            // If we don't logout, we still clear initialLoading.
+            // But if user is null, PrivateRoute will redirect.
+            // This is acceptable behavior for now.
+          }
+        }
+      } else {
+        delete axios.defaults.headers.common['x-auth-token'];
+      }
+      setInitialLoading(false);
+    };
+
+    initializeAuth();
+    // eslint-disable-next-line
+  }, [token]);
+
+  // Add interceptor for 401 responses
+  useEffect(() => {
+    const interceptor = axios.interceptors.response.use(
+      (response) => response,
+      (error) => {
+        if (error.response && error.response.status === 401) {
+          logout();
+        }
+        return Promise.reject(error);
+      }
+    );
+
+    return () => {
+      axios.interceptors.response.eject(interceptor);
+    };
+    // eslint-disable-next-line
+  }, [navigate]);
 
   // Register user
   const register = async (name: string, email: string, password: string, role: 'doctor' | 'patient') => {
     setLoading(true);
     setError(null);
-    
+
     try {
       const res = await axios.post(`${API_URL}/auth/register`, {
         name,
@@ -73,11 +117,11 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         password,
         role
       });
-      
+
       localStorage.setItem('token', res.data.token);
       setToken(res.data.token);
       setUser(res.data.user);
-      
+
       // Redirect based on role
       navigate(role === 'doctor' ? '/doctor-dashboard' : '/patient-dashboard');
     } catch (err: any) {
@@ -92,17 +136,17 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const login = async (email: string, password: string) => {
     setLoading(true);
     setError(null);
-    
+
     try {
       const res = await axios.post(`${API_URL}/auth/login`, {
         email,
         password
       });
-      
+
       localStorage.setItem('token', res.data.token);
       setToken(res.data.token);
       setUser(res.data.user);
-      
+
       // Redirect based on role
       navigate(res.data.user.role === 'doctor' ? '/doctor-dashboard' : '/patient-dashboard');
     } catch (err: any) {
@@ -111,14 +155,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     } finally {
       setLoading(false);
     }
-  };
-
-  // Logout user
-  const logout = () => {
-    localStorage.removeItem('token');
-    setToken(null);
-    setUser(null);
-    navigate('/login');
   };
 
   // Update user language preference

@@ -20,7 +20,7 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       // Initialize socket connection with auth token
       socketRef.current = io(SOCKET_URL, {
         auth: { token },
-        transports: ['websocket'],
+        transports: ['websocket', 'polling'],
       });
 
       // Handle connection events

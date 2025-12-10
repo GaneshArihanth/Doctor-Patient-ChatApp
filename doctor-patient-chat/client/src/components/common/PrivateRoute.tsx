@@ -8,10 +8,10 @@ interface PrivateRouteProps {
 }
 
 const PrivateRoute: React.FC<PrivateRouteProps> = ({ children, allowedRoles }) => {
-  const { user, loading } = useAuth();
+  const { user, initialLoading } = useAuth();
   const location = useLocation();
 
-  if (loading) {
+  if (initialLoading) {
     return <div>Loading...</div>; // Or a loading spinner
   }
 
