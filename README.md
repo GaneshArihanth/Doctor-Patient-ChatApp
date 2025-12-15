@@ -133,7 +133,7 @@ npm install
 - `POST /api/auth/login` - Login user
 
 #### Users
-- `GET /api/users/doctors` - Get list of doctors
+- `GET /api/users/doctors` - Get list of doctors fast using REST API
 - `GET /api/users/availability` - Update doctor status
 
 #### Upload
@@ -143,7 +143,7 @@ npm install
 ## 🐛 Troubleshooting
 
 **Q: Server returns 500 on Audio Upload?**
-> **A:** Check logs. Often due to missing `ffprobe`. Ensure `npm install ffprobe-static` was run in server and `API/main.py` points to it.
+> **A:** Check log. Often due to missing `ffprobe`. Ensure `npm install ffprobe-static` was run in server and `API/main.py` points to it.
 
 **Q: CORS Error on Vercel?**
 > **A:** Ensure `CLIENT_URL` in backend env matches your Vercel domain exactly (no trailing slash).
