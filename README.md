@@ -41,7 +41,7 @@ graph TD
 
 ## 🛠 Tech Stack
 
-| Component | Technology | Description |
+| Components | Technology | Description |
 |-----------|------------|-------------|
 | **Frontend** | React 18 | UI Library with Hooks |
 | **Styling** | CSS Modules | Custom styling (no external UI kit dependency) |
