@@ -1,4 +1,4 @@
-# 🩺Doctor-Patient Chat App with AI Audio Translation
+# 🩺Doctor-Patient Chat App with AI Audio Translation 
   
 A real-time chat application designed to bridge communication gaps between doctors and patients using advanced AI audio translation.
 
@@ -68,7 +68,7 @@ cd Doctor-Patient-ChatApp
 ```
 
 ### 2. Backend Setup
-The backend is a hybrid Node.js + Python environment.
+The backend is a hybrid Node.js + Python environment (Python for API).
 
 **a. Install Node Dependencies**
 ```bash
