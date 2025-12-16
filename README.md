@@ -34,7 +34,7 @@ graph TD
     - **Doctor**: Can set availability, view patient list.
     - **Patient**: Can view available doctors, initiate chat.
 - **AI Audio Translation**:
-    - Uploads audio files (mp3, wav, m4a).
+    - Uploads audio files like (mp3, wav, m4a).
     - Automatically transcodes using FFmpeg.
     - Transcribes and translates speech using Gladia API.
 - **Responsive Design**: Modern React frontend with Material-like aesthetics.
