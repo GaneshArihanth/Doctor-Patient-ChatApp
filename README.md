@@ -1,4 +1,4 @@
-# 🩺Doctor-Patient Chat App with AI Audio Translation 
+# 🩺Doctor-Patient Chat App with AI Audio Translation
   
 A real-time chat application designed to bridge communication gaps between doctors and patients using advanced AI audio translation.
 
