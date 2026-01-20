@@ -143,14 +143,6 @@ const AudioVisualizer: React.FC<AudioVisualizerProps> = ({
     
     // Continue animation loop
     animationFrameId.current = requestAnimationFrame(draw);
-  }, [analyser]); // Deleted color from dependencies as it is not used inside draw, or if it is used, it should be listed. Wait, it IS used in draw: `ctx.fillStyle = ...` but hue/sat/lightness depend on i and smoothedVolume. 
-  // Wait, color prop is PASSED to the component but NOT used in draw function directly?
-  // Let's check draw function again.
-  // Lines 108-110 use i and smoothedVolume.
-  // Line 112: `hsl(${hue}, ${saturation}%, ${lightness}%)`
-  // The `color` prop (line 37 default '#3f51b5') is NOT used in `draw`.
-  // It is used in the `Box` sx prop (line 181).
-  // So 'color' is truly unnecessary in `draw` dependency.
   }, [analyser]);
   
   // Start/stop animation when analyser changes
