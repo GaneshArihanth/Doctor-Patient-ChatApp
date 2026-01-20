@@ -9,7 +9,6 @@ import {
   Tooltip,
   IconButton,
   Collapse,
-  Link,
   Chip
 } from '@mui/material';
 import { 
@@ -17,15 +16,8 @@ import {
   Translate as TranslateIcon,
   Check as CheckIcon,
   Schedule as ScheduleIcon,
-  DoneAll as DoneAllIcon,
-  InsertDriveFile as FileIcon,
-  Image as ImageIcon,
-  PictureAsPdf as PdfIcon,
-  Description as DocumentIcon,
-  TableChart as SpreadsheetIcon
 } from '@mui/icons-material';
 import { format, parseISO } from 'date-fns';
-import { getLanguageName } from '../../config';
 import { getFileUrl, getFileIcon } from '../../utils/fileUpload';
 
 // File icon component is now imported from fileUpload.ts
@@ -94,7 +86,7 @@ interface ChatMessageProps {
 const ChatMessage: React.FC<ChatMessageProps> = (props) => {
   const { message, isOwnMessage, onTranslate, onPlayAudio } = props;
   const theme = useTheme();
-  const [showTranslation, setShowTranslation] = React.useState(false);
+  const [showTranslation] = React.useState(false);
   const [imageError, setImageError] = React.useState(false);
   const [showOriginal, setShowOriginal] = React.useState(false);
 
@@ -157,7 +149,6 @@ const ChatMessage: React.FC<ChatMessageProps> = (props) => {
 
     const fileUrl = getFileUrl(message.attachment.fileUrl);
     const isImage = message.attachment.fileType === 'image';
-    const isPdf = message.attachment.fileType === 'application/pdf';
     const fileName = message.attachment.fileName || 'Download file';
     const fileSize = message.attachment.fileSize ? formatFileSize(message.attachment.fileSize) : '';
 

@@ -47,6 +47,20 @@ const DoctorDashboard: React.FC = () => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
 
+  const updateAvailability = useCallback(async () => {
+    try {
+      // We don't have a getAvailability endpoint used here, assuming initial state or fetched elsewhere
+      // Current logic seems to just pushing current state?
+      // Actually, line 46 inits isAvailable to true.
+      // And we are calling updateAvailability on mount.
+      // This might overwrite server state if we don't fetch it first.
+      // However, sticking to strict refactor of existing logic:
+      await usersAPI.updateAvailability(isAvailable);
+    } catch (error) {
+      console.error("Error updating availability:", error);
+    }
+  }, [isAvailable]);
+
   useEffect(() => {
     const fetchPatients = async () => {
       try {
@@ -88,28 +102,17 @@ const DoctorDashboard: React.FC = () => {
 
     if (user) {
       fetchPatients();
+    }
+  }, [user]);
+
+  // Initial availability check/sync
+  useEffect(() => {
+    if (user) {
       updateAvailability();
     }
-  }, [user]); // Removed updateAvailability from dependency array to avoid infinite loop if it changes
+  }, [user, updateAvailability]);
 
-  const updateAvailability = useCallback(async () => {
-    try {
-      // We don't have a getAvailability endpoint used here, assuming initial state or fetched elsewhere
-      // Current logic seems to just pushing current state?
-      // Actually, line 46 inits isAvailable to true.
-      // And we are calling updateAvailability on mount.
-      // This might overwrite server state if we don't fetch it first.
-      // However, sticking to strict refactor of existing logic:
-      await usersAPI.updateAvailability(isAvailable);
-    } catch (error) {
-      console.error("Error updating availability:", error);
-    }
-  }, [isAvailable]);
 
-  // Fix: The original code had updateAvailability in the dependency array of the effect,
-  // but updateAvailability depends on isAvailable.
-  // If isAvailable changes, updateAvailability changes, triggering the effect again?
-  // No, useCallback handles that.
 
   const handleAvailabilityChange = async (
     event: React.ChangeEvent<HTMLInputElement>,

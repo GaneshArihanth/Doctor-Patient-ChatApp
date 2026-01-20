@@ -86,7 +86,7 @@ export const getLanguageName = (code: string) => {
   return lang ? lang.name : 'Unknown';
 };
 
-export default {
+const config = {
   API_BASE_URL,
   WS_BASE_URL,
   API_ENDPOINTS,
@@ -95,3 +95,5 @@ export default {
   SUPPORTED_LANGUAGES,
   getLanguageName,
 };
+
+export default config;
