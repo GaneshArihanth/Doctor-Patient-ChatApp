@@ -24,6 +24,7 @@ const allowedOrigins = [
   'http://localhost:3000',
   'http://localhost:3001',
   'https://doctor-patient-chatapp-ga15.vercel.app', // Your Vercel App
+  'https://doctor-patient-chatapp-9kd1nni4e-ganesh-arihanths-projects.vercel.app', // Specific Vercel Deployment
   process.env.CLIENT_URL // Allow setting via Env Var
 ].filter(Boolean);
 
