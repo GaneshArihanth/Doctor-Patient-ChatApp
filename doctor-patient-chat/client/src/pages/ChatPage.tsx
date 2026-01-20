@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Box, Typography, IconButton, TextField, Paper, Avatar, Badge, useTheme, Select, MenuItem, FormControl, InputLabel, SelectChangeEvent, Snackbar, Alert, Button } from '@mui/material';
+import { Box, Typography, IconButton, TextField, Avatar, useTheme, Select, MenuItem, FormControl, InputLabel, SelectChangeEvent, Snackbar, Alert, Button } from '@mui/material';
 import { ArrowBack, Send, Mic, AttachFile } from '@mui/icons-material';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';

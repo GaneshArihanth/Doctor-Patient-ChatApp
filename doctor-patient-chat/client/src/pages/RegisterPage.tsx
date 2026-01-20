@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import {
   Container,
   Paper,
@@ -25,7 +25,7 @@ const RegisterPage: React.FC = () => {
   const [role, setRole] = useState<'doctor' | 'patient'>('patient');
   const [error, setError] = useState<string | null>(null);
   const { register, loading } = useAuth();
-  const navigate = useNavigate();
+
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

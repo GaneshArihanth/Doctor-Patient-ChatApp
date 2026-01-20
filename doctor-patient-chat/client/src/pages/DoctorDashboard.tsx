@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { API_BASE_URL } from '../config';
 import { useNavigate } from 'react-router-dom';
 import {
@@ -24,7 +24,6 @@ import {
   Person as PersonIcon, 
   Search as SearchIcon,
   Chat as ChatIcon,
-  MedicalServices as MedicalServicesIcon,
   CheckCircle as CheckCircleIcon
 } from '@mui/icons-material';
 import { useAuth } from '../context/AuthContext';
@@ -84,15 +83,15 @@ const DoctorDashboard: React.FC = () => {
       fetchPatients();
       updateAvailability();
     }
-  }, [user]);
+  }, [user, updateAvailability]);
 
-  const updateAvailability = async () => {
+  const updateAvailability = useCallback(async () => {
     try {
       await axios.put(`${API_BASE_URL}/users/availability`, { isAvailable });
     } catch (error) {
       console.error('Error updating availability:', error);
     }
-  };
+  }, [isAvailable]);
 
   const handleAvailabilityChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const newStatus = event.target.checked;
